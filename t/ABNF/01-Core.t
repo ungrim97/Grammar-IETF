@@ -108,8 +108,12 @@ subtest {
 
     subtest {
         isnt_match('“', 'DQUOTE');
-        isnt_match('“', 'DQUOTE');
+        isnt_match('”', 'DQUOTE');
     }, 'not unicode';
+
+    subtest {
+        isnt_match("''", 'DQUOTE');
+    }, 'not two quotes'
 }, 'DQUOTE';
 
 subtest {}, 'HEXDIG';
