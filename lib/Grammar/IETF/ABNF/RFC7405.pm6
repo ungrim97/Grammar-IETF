@@ -17,7 +17,7 @@ role Grammar::IETF::ABNF::RFC7405_Core is Grammar {
     token WSP    { <SP> | <HTAB>                           }
 }
 
-grammar Grammar::IETF::ABNF::RFC7405_Rules does Grammar::IETF::ABNF::RFC7405_Core {
+grammar Grammar::IETF::ABNF::RFC7405 does Grammar::IETF::ABNF::RFC7405_Core {
     rule TOP           { ^ <rulelist> $                                               }
 
     rule rulelist      { [<rule> | [.<c-wsp>* <.c-nl>]]+                              }

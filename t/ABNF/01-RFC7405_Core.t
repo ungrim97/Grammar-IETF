@@ -152,14 +152,48 @@ subtest {
 }, 'LWSP';
 
 subtest {
-    
+    plan 255;
+
+    for "\x[00]".."\x[FF]" -> $octet {
+        is_match($octet, 'OCTET');
+    }
 }, 'OCTET';
 
-subtest {}, 'SP';
+subtest {
+    is_match(" ", 'SP');
 
-subtest {}, 'VCHAR';
+    isnt_match("\t", 'SP');
+    isnt_match(' ', 'SP'); # nbsp
+    isnt_match("\x[1680]", 'SP'); # Ogham Space Mark
+    isnt_match("\x[180E]", 'SP'); # Mongolian Vowel Separator
+    isnt_match("\x[2000]", 'SP'); # EN Quad
+    isnt_match("\x[2001]", 'SP'); # EM Quad
+    isnt_match("\x[2002]", 'SP'); # EN Space
+    isnt_match("\x[2003]", 'SP'); # EM Space
+    isnt_match("\x[2004]", 'SP'); # Three-per-em space
+    isnt_match("\x[2005]", 'SP'); # Four-per-em space
+    isnt_match("\x[2006]", 'SP'); # Six-per-em Space
+    isnt_match("\x[2007]", 'SP'); # Figure Space
+    isnt_match("\x[2008]", 'SP'); # Punctuation Space
+    isnt_match("\x[2009]", 'SP'); # Thin Space
+    isnt_match("\x[200A]", 'SP'); # Hair Space
+    isnt_match("\x[200B]", 'SP'); # Zero Width Space
+    isnt_match("\x[202F]", 'SP'); # Narrow No-Break Space
+    isnt_match("\x[205F]", 'SP'); # Mediam Mathematical Space
+    isnt_match("\x[3000]", 'SP'); # Ideographic Space
+    isnt_match("\x[FEFF]", 'SP'); # Zerp Wodth No-Break Space
+}, 'SP';
 
-subtest {}, 'WSP';
+subtest {
+    for "\x[21]".."\x[7E]" -> $char {
+        is_match($char, 'VCHAR');
+    }
+}, 'VCHAR';
+
+subtest {
+    is_match(' ', 'WSP');
+    is_match("\t", 'WSP');
+}, 'WSP';
 
 sub is_match (Any:D $string, Str $rule) {
     my $match = Grammar::IETF::ABNF::RFC7405_Core.parse($string, :rule($rule));
