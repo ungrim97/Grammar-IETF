@@ -116,15 +116,44 @@ subtest {
     }, 'not two quotes'
 }, 'DQUOTE';
 
-subtest {}, 'HEXDIG';
+subtest {
+    for "A".."F" -> $char {
+        is_match($char, 'HEXDIG');
+    }
 
-subtest {}, 'HTAB';
+    for "a".."f" -> $char {
+        is_match($char, 'HEXDIG');
+    }
 
-subtest {}, 'LF';
+    is_match(2, 'HEXDIG'); # We've already tested <DIGIT>
 
-subtest {}, 'LWSP';
+    isnt_match('X', 'HEXDIG');
+}, 'HEXDIG';
 
-subtest {}, 'OCTET';
+subtest {
+    is_match("\t", 'HTAB');
+    is_match("	", 'HTAB');
+
+    # Vertical Tab
+    isnt_match("", 'HTAB');
+}, 'HTAB';
+
+subtest {
+    is_match("\n", 'LF');
+
+    isnt_match("\r", 'LF');
+    isnt_match("\x[B]", 'LF');
+    isnt_match("\x[85]", 'LF');
+}, 'LF';
+
+subtest {
+    is_match(' ', 'LWSP');
+    is_match("\r\n ", 'LWSP')
+}, 'LWSP';
+
+subtest {
+    
+}, 'OCTET';
 
 subtest {}, 'SP';
 
@@ -142,7 +171,7 @@ sub is_match (Any:D $string, Str $rule) {
 sub isnt_match (Any:D $string, Str $rule) {
     my $match = Grammar::IETF::ABNF::RFC7405_Core.parse($string, :rule($rule));
 
-    ok(!$match, "{print_safe_string($string)} didn't matched");
+     ok(!$match, "{print_safe_string($string)} didn't matched");
 }
 
 sub print_safe_string (Any:D $string) {

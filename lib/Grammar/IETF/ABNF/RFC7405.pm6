@@ -14,11 +14,11 @@ role Grammar::IETF::ABNF::RFC7405_Core is Grammar {
     token OCTET  { <[\x[00]..\x[FF]]>                      }
     token SP     { \x[20]                                  }
     token VCHAR  { <[\x[21]..\x[7E]]>                      }
-    token WSP    { <SP> | <HTAB>                         }
+    token WSP    { <SP> | <HTAB>                           }
 }
 
-role Grammar::IETF::ABNF::RFC7405_Rules does Grammar::IETF::ABNF::RFC7405_Core {
-    rule TOP           { ^ <rulelist> $ }
+grammar Grammar::IETF::ABNF::RFC7405_Rules does Grammar::IETF::ABNF::RFC7405_Core {
+    rule TOP           { ^ <rulelist> $                                               }
 
     rule rulelist      { [<rule> | [.<c-wsp>* <.c-nl>]]+                              }
     rule rule          { <rulename> <defined-as> <elements> <.c-nl>                   }
