@@ -42,7 +42,7 @@ grammar Grammar::IETF::ABNF::RFC7405 does Grammar::IETF::ABNF::RFC7405_Core {
 
     token elements      { <.alternation> <.c-wsp>*                                         }
     token rulename      { <.ALPHA> [<.ALPHA> | <.DIGIT> | '-']*                            }
-    token defined-as    { <.c-wsp>* ['=' | '=/'] <.c-wsp>*                                 }
+    token defined-as    { <.c-wsp>* [ '=' | '=/' ] <.c-wsp>*                               }
     token quoted-string { <.DQUOTE> [ <[\x[20]..\x[21]]> | <[\x[23]..\x[7E]]> ]* <.DQUOTE> }
     token num-val       { '%' [<.bin-val> | <.dec-val> | <.hex-val>]                       }
     token bin-val       { 'b' <.BIT>+    [ ['.' <.BIT>+]+    | ['-' <.BIT>+]   ]?          }
