@@ -1,9 +1,9 @@
 use v6;
 use Test;
 
-plan 17;
+plan 16;
 
-use Grammar::IETF::ABNF::RFC7405;
+use Grammar::IETF::ABNF::RFC5234;
 
 subtest {
     plan 5;
@@ -152,7 +152,7 @@ subtest {
 }, 'LWSP';
 
 subtest {
-    plan 255;
+    plan 512;
 
     for "\x[00]".."\x[FF]" -> $octet {
         is_match($octet, 'OCTET');
@@ -196,14 +196,14 @@ subtest {
 }, 'WSP';
 
 sub is_match (Any:D $string, Str $rule) {
-    my $match = Grammar::IETF::ABNF::RFC7405_Core.parse($string, :rule($rule));
+    my $match = Grammar::IETF::ABNF::RFC5234_Core.parse($string, :rule($rule));
 
     ok($match, "String '{print_safe_string($string)}' matched");
     is($match, $string, " - Matched '{print_safe_string($match.Str)}' for '{print_safe_string($string)}'");
 }
 
 sub isnt_match (Any:D $string, Str $rule) {
-    my $match = Grammar::IETF::ABNF::RFC7405_Core.parse($string, :rule($rule));
+    my $match = Grammar::IETF::ABNF::RFC5234_Core.parse($string, :rule($rule));
 
      ok(!$match, "{print_safe_string($string)} didn't matched");
 }
