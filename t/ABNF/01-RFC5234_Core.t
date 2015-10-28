@@ -113,7 +113,7 @@ subtest {
 
     subtest {
         isnt_match("''", 'DQUOTE');
-    }, 'not two quotes'
+    }, 'not two quotes';
 }, 'DQUOTE';
 
 subtest {
