@@ -18,25 +18,26 @@ role Grammar::IETF::ABNF::RFC7405_Core is Grammar {
 }
 
 grammar Grammar::IETF::ABNF::RFC7405 does Grammar::IETF::ABNF::RFC7405_Core {
-    rule TOP           { ^ <rulelist> $                                               }
+    rule TOP            { ^ <rulelist> $                                               }
 
-    rule rulelist      { [<rule> | [.<c-wsp>* <.c-nl>]]+                              }
-    rule rule          { <rulename> <defined-as> <elements> <.c-nl>                   }
-    rule c-wsp         { <.WSP> | [<c-nl> <.WSP>]                                     }
-    rule c-nl          { <.comment> | <.CRLF>                                         }
-    rule comment       { ';' [<.WSP> | <.VCHAR>]* <.CRLF>                             }
-    rule alternation   { <.concatenation> [<.c-wsp>* '/' <.c-wsp>* <.concatenation>]* }
-    rule concatenation { <.repetition> [<.c-wsp>+ <.repetition>]*                     }
-    rule repetition    { <.repeat>? <.element>                                        }
-    rule repeat        { <.DIGIT>+ | [<.DIGIT>* '*' <.DIGIT>*]                        }
-    rule group         { '(' <.c-wsp>* <.alternation> <.c-wsp>* ')'                   }
-    rule option        { '[' <.c-wsp>* <.alternation> <.c-wsp>* ']'                   }
-    rule char-val      { <.case-insensitive-string> | <.case-sensitive-string>        }
+    token text          { <-[\n]>* \n                                                  }
+    token rulelist      { [<rule> | [.<c-wsp>* <.c-nl>]]+                              }
+    token rule          { <rulename> <defined-as> <elements> <.c-nl>                   }
+    token c-wsp         { <.WSP> | [<c-nl> <.WSP>]                                     }
+    token c-nl          { <.comment> | <.CRLF>                                         }
+    token comment       { ';' [<.WSP> | <.VCHAR>]* <.CRLF>                             }
+    token alternation   { <.concatenation> [<.c-wsp>* '/' <.c-wsp>* <.concatenation>]* }
+    token concatenation { <.repetition> [<.c-wsp>+ <.repetition>]*                     }
+    token repetition    { <.repeat>? <.element>                                        }
+    token repeat        { <.DIGIT>+ | [<.DIGIT>* '*' <.DIGIT>*]                        }
+    token group         { '(' <.c-wsp>* <.alternation> <.c-wsp>* ')'                   }
+    token option        { '[' <.c-wsp>* <.alternation> <.c-wsp>* ']'                   }
+    token char-val      { <.case-insensitive-string> | <.case-sensitive-string>        }
 
-    rule case-insensitive-string { '%i'? <.quoted-string> }
-    rule case-sensitive-string   { '%s' <.quoted-string>  }
+    token case-insensitive-string { '%i'? <.quoted-string> }
+    token case-sensitive-string   { '%s' <.quoted-string>  }
 
-    rule element {
+    token element {
         <.rulename> | <.group> | <.option> | <.char-val> | <.num-val> | <.prose-val>
     }
 
