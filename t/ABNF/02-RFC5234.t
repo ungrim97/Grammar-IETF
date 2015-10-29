@@ -123,29 +123,26 @@ subtest {
 }, 'defined-as';
 
 subtest {
-    #    my $match = Grammar::IETF::ABNF::RFC5234.parse('rule = WSP [optional-token] "quoted-string"'~"\r\n");
-    # ok($match, 'Matched string');
-
-    my $match = Grammar::IETF::ABNF::RFC5234.parse('rulelist       =  1*( rule / (*c-wsp c-nl) )'~"\r\n");
-    ok($match, 'Matched single rule');
-    $match.say;
+    is_match('rulelist       =  1*( rule / (*c-wsp c-nl) )'~"\r\n", 'rule');
 
 }, 'rule';
 
 subtest {
-    my $text = "rfc5234_grammar.txt".IO.slurp;
-    $text ~~ s:g/\n/\r\n/;
-    $text.perl.say;
+    my $text = "t/ABNF/rfc5234_grammar.txt".IO.slurp;
 
-    my $match = Grammar::IETF::ABNF::RFC5234.parse($text);
-    ok($match, 'Matched Text');
+    # File is \n but the grammar spec is \r\n;
+    $text ~~ s:g/\n/\r\n/;
+
+    is_match($text, 'rulelist');
 }, 'rules list from file (rfc spec)';
 
 sub is_match (Mu:D $string, Str $rule) {
     ok(
         Grammar::IETF::ABNF::RFC5234.parse($string, :rule($rule)),
-        "{print_safe_string("$/")} matched for $rule"
+        "{print_safe_string($string)} matched for $rule"
     );
+
+    is($/, $string, " - Matched {$/.gist} for $string");
 }
 
 sub isnt_match (Mu:D $string, Str $rule) {
