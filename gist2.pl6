@@ -1,4 +1,4 @@
-role Grammar::IETF::ABNF::RFC5234_Core is Grammar {
+role Grammar::IETF::ABNF::RFC5234_Core is Grammar {                                                                     
     token ALPHA  { <[\x[41]..\x[5A]]> | <[\x[61]..\x[7A]]> }
     token BIT    { 0 | 1                                   }
     token CHAR   { <[\x[01]..\x[7F]]>                      }
@@ -16,10 +16,10 @@ role Grammar::IETF::ABNF::RFC5234_Core is Grammar {
     token VCHAR  { <[\x[21]..\x[7E]]>                      }
     token WSP    { <SP> | <HTAB>                           }
 }
-
+ 
 grammar Grammar::IETF::ABNF::RFC5234 does Grammar::IETF::ABNF::RFC5234_Core {
     rule TOP            { ^ <rulelist> $                                               }
-
+ 
     token rulelist      { [<rule> | [.<c-wsp>* <.c-nl>]]+                              }
     token rule          { <rulename> <defined-as> <elements> <.c-nl>                   }
     token c-wsp         { <.WSP> | [<c-nl> <.WSP>]                                     }
@@ -27,11 +27,12 @@ grammar Grammar::IETF::ABNF::RFC5234 does Grammar::IETF::ABNF::RFC5234_Core {
     token comment       { ';' [<.WSP> | <.VCHAR>]* <.CRLF>                             }
     token alternation   { <concatenation> [<.c-wsp>* '/' <.c-wsp>* <concatenation>]* }
     token concatenation { <repetition> [<.c-wsp>+ <repetition>]*                     }
-    token repetition    { <repeat>? <element>                                        }
+    token repetition    { <repeat>? <element>                                        }                                  
     token elements      { <alternation> <.c-wsp>*                                     }
     token rulename      { <.ALPHA> [<.ALPHA> | <.DIGIT> | '-']*                        }
     token defined-as    { <.c-wsp>* ['=' | '=/'] <.c-wsp>*                             }
-    token repeat        { <.DIGIT>+ | [<.DIGIT>* '*' <.DIGIT>*]                        }
+    token repeat        { <.DIGIT>+ | [<.DIGIT>* <star> <.DIGIT>*]                        }
+    token star { '*' }
     token element       {
         <rulename> | <group> | <option> | <char-val> | <num-val> | <prose-val>
     }
@@ -44,3 +45,14 @@ grammar Grammar::IETF::ABNF::RFC5234 does Grammar::IETF::ABNF::RFC5234_Core {
     token hex-val       { <[xX]> <.HEXDIG>+ [ ['.' <.HEXDIG>+ ]+ | ['-' <.HEXDIG>+ ] ]?    }
     token prose-val     { '<' [ <[\x[20]..\x[3D]]> | <[\x[3F]..\x[7E]]> ]* '>'             }
 }
+
+use v6;   
+use Test; 
+
+subtest { 
+    my $match = Grammar::IETF::ABNF::RFC5234.parse('rulelist       =  1*( rule / (*c-wsp c-nl) )'~"\r\n");
+    ok($match, 'Matched single rule');
+    $match.say;
+}, 'rule';
+
+
