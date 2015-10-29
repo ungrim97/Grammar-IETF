@@ -1,225 +1,152 @@
 # Internet Message Format
+use Grammar::IETF::ABNF;
 
-role Grammar::HTTP::RFC5322 {
+grammar Grammar::IETF::IMF::RFC5322 is Grammar::IETF::ABNF {
+    # Quoted Characters
+    token quoted-pair { [ \\ [ <.VCHAR> | <.WSP> ] ] | <.obs-qp> }
 
-    token quoted-pair { [\\ [<.VCHAR> | <.WSP>]] | <.obs-qp> }
+    # Folding whitespace and comments
+    token FWS      { [ [ <.WSP>* <.CRLF> ]? <.WSP>+ ] | <.obs-FWS>                      }
+    token ctext    { <[ \c[33]..\c[39] \c[42]..\c[91] \c[93]..\c[126] ]> | <.obs-ctext> }
+    token ccontent { <.ctext> | <.quoted-pair> | <.comment>                             }
+    token comment  { '(' [ <.FWS>? <.ccontent> ]* <.FWS>? ')'                           }
+    token CFWS     { [ [ <.FWS>? <.comment> ]+ <.FWS>? ] | <.FWS>                       }
 
-    token FWS { [[<.WSP>* <.CRLF>]? <.WSP>+] | <.obs-FWS> }
+    # Atom
+    token atext    { <.ALPHA> | <.DIGIT> | <[ ! # $ %  & ' * + - | = ? ^ _ ` { | } ~ ]> }
+    token atom     { <.CFWS>? <.atext>+ <.CFWS>?                                        }
+    token dot-atom-text { <.atext>+ [ '.' <.atext>+ ]*                                  }
+    token dot-atom { <.CFWS>? <.dot-atom-text> <.CFWS>?                                 }
+    token specials { <[ ( ) < > [ \] : ; @ \\ , .]> | <.DQUOTE>                         }
 
-    token ctext { <[\c[33]..\c[39]\c[42]..\c[91]\c[93]..\c[126]]> | <.obs-ctext> }
+    # Quoted Strings
+    token qtext    { <[ \c[33] \c[35]..\c[91] \c[93]..\c[126] ]> | <.obs-qtext>      }
+    token qcontent { <.qtext> | <.quoted-pair>                                       }
+    token quoted-string { <.CFWS>? '"' [ <.FWS>? <.qcontent> ]* <.FWS>? '"' <.CFWS>? }
 
-    token ccontent { <.ctext> | <.quoted-pair> | <.comment> }
-    token comment { '(' [<.FWS>? <.ccontent>]* <.FWS>? ')' }
+    # Misc Tokens
+    token word   { <.atom> | <.quoted-string>                                }
+    token phrase { <.word>+ | <.obs-phrase>                                  }
+    token unstructured { [ [ <.FWS>? <.VCHAR> ]* <.WSP>* ] | <.obs-unstruct> }
 
-    token CFWS { [[<.FWS>? <.comment>]+ <.FWS>?] | <.FWS> }
-
-    token atext { 
-        | <.ALPHA>  
-        | <.DIGIT>
-        | < ! # $ %  & ' * + - | = ? ^ _ ` { | } ~ >
+    # Date
+    token date-time   { [ <.day-of-week> ',' ]? <.date> <.time> <.CFWS>?      }
+    token day-of-week { [ <.FWS>? <.day-name> ] | <.obs-day-of-week>          }
+    token day-name    { 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun' }
+    token date        { <day> <month> <year>                                  }
+    token day         { [ <.FWS>? [ <.DIGIT> ** 1..2 ] <.FWS> ] | <.obs-day>  }
+    token month       {
+        'Jan' | 'Feb' | 'Mar' | 'Apr' |
+        'May' | 'Jun' | 'Jul' | 'Aug' |
+        'Sep' | 'Oct' | 'Nov' | 'Dec'
     }
+    token year        { [ <.FWS> <.DIGIT> ** 4..* <.FWS> ] | <.obs-year>      }
+    token time        { <.time-of-day> <.zone>                                }
+    token time-of-day { <.hour> ':' <.minute> [ ':' <.second> ]?              }
+    token hour        { <.DIGIT> ** 2 | <.obs-hour>                           }
+    token minute      { <.DIGIT> ** 2 | <.obs-minute>                         }
+    token second      { <.DIGIT> ** 2 | <.obs-second>                         }
+    token zone        { [ <.FWS> <[+-]> <.DIGIT> ** 4 ] | <.obs-zone>         }
 
-    token atom { <.CFWS>? <.atext>+ <.CFWS>? }
+    # Address
+    token address      { <mailbox> | <group>                                           }
+    token mailbox      { <name-addr> | <addr-spec>                                     }
+    token name-addr    { <display-name>? <angle-addr>                                  }
+    token angle-addr   { [ <.CFWS>? '<' <addr-spec> '>' <.CFWS>? ] | <.obs-angle-addr> }
+    token group        { <display-name> ':' <group-list>? ';' <.CFWS>?                 }
+    token display-name { <.phrase>                                                     }
+    token mailbox-list { [ <mailbox> +% ',' ] | <obs-mbox-list>                        }
+    token address-list { [ <address> +% ',' ] | <obs-addr-list>                        }
+    token group-list   { <mailbox-list> | <.CFWS> | <obs-group-list>                   }
 
-    token dot-atom-text { <.atext>+ ['.' <.atext>+]* }
-    token dot-atom { <.CFWS>? <.dot-atom-text> <.CFWS>? }
+    # Address Spec
+    token addr-spec      { <.local-part> '@' <.domain>                             }
+    token local-part     { <.dot-atom> | <.quoted-string> | <.obs-local-part>      }
+    token domain         { <.dot-atom> | <.domain-literal> | <.obs-domain>         }
+    token domain-literal { <.CFWS>? '[' [ <.FWS>? <.dtext> ]* <.FWS>? ']' <.CFWS>? }
+    token dtext          { <[ \c[33]..\c[90] \c[94]..\c[126] ]> | <.obs-dtext>     }
 
-    token qtext { <[\c[33]\c[35]..\c[91]\c[93]..\c[126]]> | <.obs-qtext> }
+    # Message Syntax
+    token message { [ <fields> | <.obs-fields> ] [ <.CRLF> <body> ]?              }
+    token body { [ [ <.text> ** ^998 <.CRLF> ]* <.text> ** 0..998 ] | <.obs-body> }
+    token text { <[ \c[1]..\c[9] \c[11,12] \c[14]..\c[127] ]>                     }
 
-    token qcontent { <.qtext> | <.quoted-pair> }
-
-    token quoted-string { <.CFWS>? '"' [<.FWS>? <.qcontent>]* <.FWS>? '"' <.CFWS>? }
-
-    token word { <.atom> | <.quoted-string> }
-
-    token phrase { <.word>+ | <.obs-phrase> }
-
-    token unstructured { [[<.FWS>? <.VCHAR>]* <.WSP>*] | <.obs-unstruct> }
-
-    token date-time { [<.day-of-week> ',']? <.date> <.time> <.CFWS>? }
-
-    token day-of-week { [<.FWS>? <.day-name>] | <.obs-day-of-week> }
-
-    token day-name { 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun' }
-
-    token date { <day> <month> <year> }
-
-    token day { [<.FWS>? [<.DIGIT> ** 1..2] <.FWS>] | <.obs-day> }
-
-    token month { 'Jan' | 'Feb' | 'Mar' | 'Apr' | 'May' | 'Jun' | 'Jul' | 'Aug' | 'Sep' | 'Oct' | 'Nov' | 'Dec'}
-
-    token year { 
-        |  [   
-            <.FWS> 
-            <.DIGIT> ** 4  # i.e.
-            <.DIGIT>*      # <.DIGIT> ** 4..Inf
-            <.FWS>
-            ] 
-        |  <.obs-year> 
-    }
-
-    token time { <.time-of-day> <.zone> }
-
-    token time-of-day { <.hour> ':' <.minute> [':' <.second>]? }
-
-    token hour { [<.DIGIT> ** 2] | <.obs-hour> }
-
-    token minute { [<.DIGIT> ** 2] | <.obs-minute> }
-
-    token second { [<.DIGIT> ** 2] | <.obs-second> }
-
-    token zone { [<.FWS> ['+' | '-'] [<.DIGIT> ** 4]] | <.obs-zone> }
-
-    token address { <mailbox> | <group> }
-
-    token mailbox { <name-addr> | <addr-spec> }
-
-    token name-addr { <display-name>? <angle-addr> }
-
-    token angle-addr { [<.CFWS>? '<' <addr-spec> '>' <.CFWS>?] | <.obs-angle-addr> }
-
-    token group { <display-name> ':' <group-list>? ';' <.CFWS>? }
-
-    token display-name { <.phrase> }
-
-    token mailbox-list { [<mailbox> *%% ','] | <obs-mbox-list> }
-
-    token address-list { [<address> *%% ','] | <obs-addr-list> }
-
-    token group-list { <mailbox-list> | <.CFWS> | <obs-group-list> }
-
-    token addr-spec { <.local-part> '@' <.domain> }
-
-    token local-part { <.dot-atom> | <.quoted-string> | <.obs-local-part> }
-
-    token domain { <.dot-atom> | <.domain-literal> | <.obs-domain> }
-
-    token domain-literal { <.CFWS>? '[' [<.FWS>? <.dtext>]* <.FWS>? ']' <.CFWS>? }
-
-    token dtext { <[\c[33]..\c[90]\c[94]..\c[126]]> | <.obs-dtext> }
-
-    token message { [<fields> | $<fields>=<.obs-fields>] [<.CRLF> <body>]? }
-
-    token body { [[[<.text> ** 0..998] <.CRLF>]* [<.text> ** 0..998]] | <.obs-body> }
-
-    token text { <[\c[1]..\c[9]\c[11,12]\c[14]..\c[127]]> }
-
+    # Field Definition
     token fields {
         [
-        <trace>
-            [   
-            | <resent-date>
-            | <resent-from>
-            | <resent-sender>
-            | <resent-to>
-            | <resent-cc>
-            | <resent-bcc>
-            | <resent-msg-id>
+            <trace> <optional-field>*
+            [
+                <resent-date> | <resent-from> | <resent-sender> | <resent-to> |
+                <resent-cc>   | <resent-bcc>  | <resent-msg-id>
             ]*
         ]*
         [
-        | <orig-date>
-        | <from>
-        | <sender>
-        | <reply-to>
-        | <to>
-        | <cc>
-        | <bcc>
-        | <message-id>
-        | <in-reply-to>
-        | <references>
-        | <subject>
-        | <comments>
-        | <keywords>
-        | <optional-field>
+            <orig-date>  | <from>        | <sender>     | <reply-to>    | <to>         |
+            <cc>         | <bcc>         | <message-id> | <in-reply-to> | <references> |
+            <subject>    | <comments>    | <keywords>   | <optional-field>
         ]*
     }
 
+    # Origination Date
     token orig-date { "Date:" <date-time> <.CRLF> }
 
+    # Originator
     token from { "From:" <mailbox-list> <.CRLF> }
-
     token sender { "Sender:" <mailbox> <.CRLF> }
-
     token reply-to { "Reply-To:" <address-list> <.CRLF> }
 
+    # Destination
     token to { "To:" <address-list> <.CRLF> }
-
     token cc { "Cc:" <address-list> <.CRLF> }
-
     token bcc { "Bcc:" [<address-list> | <.CFWS>]? <.CRLF> }
 
+    # Identification
     token message-id { "Message-ID:" <msg-id> <.CRLF> }
-
     token in-reply-to { "In-Reply-To:" <msg-id>+ <.CRLF> }
-
     token references { "References:" <msg-id>+ <.CRLF> }
-
     token msg-id { <.CFWS>? '<' <.id-left> '@' <.id-right> '>' <.CFWS>? }
-
     token id-left  { <.dot-atom-text> | <.obs-id-left> }
-
     token id-right { <.dot-atom-text> | <.no-fold-literal> | <.obs-id-left> }
-
     token no-fold-literal { '[' <.dtext>* ']' }
 
+    # Informational
     token subject { "Subject:" $<value>=<.unstructured> <.CRLF> }
-
     token comments { "Comments:" (<.unstructured>) <.CRLF> }
-
     token keywords { "Keywords:" [<phrase> *%% ','] <.CRLF> }
 
+    # Resent
     token resent-date { "Resent-Date:" <.date-time> <.CRLF> }
-
     token resent-from { "Resent-From:" <.mailbox-list> <.CRLF> }
-
     token resent-sender { "Resent-Sender:" <.mailbox> <.CRLF> }
-
     token resent-to { "Resent-To:" <.address-list> <.CRLF> }
-
     token resent-cc { "Resent-Cc:" <.address-list> <.CRLF> }
-
     token resent-bcc { "Resent-Bcc:" [<.address-list> | <.CFWS>] <.CRLF> }
-
     token resent-msg-id { "Resent-Message-ID:" <.msg-id> <.CRLF> }
 
+    # Trace
     token trace { <return>? <received>+ }
-
     token return { "Return-Path:" <path> <.CRLF> }
-
     token path { <.angle-addr> | [<.CFWS>? '<' <.CFWS>? '>' <.CFWS>?] }
-
-    # Errata ID: 3979 
-    token received { "Received:" [<received-token>+ | <.CFWS>] ';' <date-time> <.CRLF> }
-
+    token received { "Received:" <received-token>* ';' <date-time> <.CRLF> }
     token received-token { <.word> | <.angle-addr> | <.addr-spec> | <.domain> }
 
-    token optional-field { $<field>=<.field-name> ':' $<value>=<.unstructured> <.CRLF> }
-
+    # Optional
+    token optional-field { <field-name> ':' <.unstructured> <.CRLF> }
     token field-name { <.ftext>+ }
-
     token ftext { <[\c[33]..\c[57]\c[59]..\c[126]]> }
 
+    # Obsolete Syntax
+    # Misc Tokens
     token obs-NO-WS-CTL { <[\c[1]..\c[8]\c[11,12]\c[14]..\c[31]\c[127]]> }
-
     token obs-ctext { <.obs-NO-WS-CTL> }
-
     token obs-qtext { <.obs-NO-WS-CTL> }
-
     token obs-utext { \c[0] | <.obs-NO-WS-CTL> | <.VCHAR> }
-
     token obs-qp { \\ [\c[0] | <.obs-NO-WS-CTL> | <.LF> | <.CR>] }
-
     token obs-body { [[<.LF>* <.CR>* [[\c[0] | <.text>] <.LF>* <.CR>*]*] | <.CRLF>]* }
-
-    #Errata ID: 1905
-    token obs-unstruct { [[<.CR>* [<.obs-utext> | <.FWS>]+] | <.LF>+ ]* <.CR>* }
-
+    token obs-unstruct { [[<.LF>* <.CR>* [ <.obs-utext> <.LF>* <CR>* ]* ] ]* | <.FWS> }
     token obs-phrase { <.word> [<.word> | '.' | <.CFWS>]* }
-
     token obs-phrase-list { [<.phrase> | <.CFWS>]? [',' [<.phrase> | <.CFWS>]?]* }
 
-    # Errata ID: 1908
     token obs-FWS { [<.CRLF>? <.WSP>]+ }
 
     token obs-day-of-week { <.CFWS>? <.day-name> <.CFWS>? }
@@ -234,7 +161,7 @@ role Grammar::HTTP::RFC5322 {
 
     token obs-second { <.CFWS>? <.DIGIT> ** 2 <.CFWS>? }
 
-    token obs-zone { 
+    token obs-zone {
         | 'UT'  | 'GMT'
         | 'EST' | 'EDT'
         | 'CST' | 'CDT'
