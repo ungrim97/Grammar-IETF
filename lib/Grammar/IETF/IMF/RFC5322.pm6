@@ -13,7 +13,7 @@ grammar Grammar::IETF::IMF::RFC5322 is Grammar::IETF::ABNF {
     token CFWS     { [ [ <.FWS>? <.comment> ]+ <.FWS>? ] | <.FWS>                       }
 
     # Atom
-    token atext    { <.ALPHA> | <.DIGIT> | <[ ! # $ %  & ' * + - | = ? ^ _ ` { | } ~ ]> }
+    token atext    { <.ALPHA> | <.DIGIT> | <[ ! # $ %  & ' * + \- = ? ^ _ ` { | } ~ ]> }
     token atom     { <.CFWS>? <.atext>+ <.CFWS>?                                        }
     token dot-atom-text { <.atext>+ [ '.' <.atext>+ ]*                                  }
     token dot-atom { <.CFWS>? <.dot-atom-text> <.CFWS>?                                 }
